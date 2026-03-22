@@ -240,7 +240,7 @@ When you start MetaClaw with `--daemon`, the command waits until the local proxy
 
 ```yaml
 mode: madmax               # "madmax" | "rl" | "skills_only"
-claw_type: openclaw        # "openclaw" | "copaw" | "ironclaw" | "picoclaw" | "zeroclaw" | "nanoclaw" | "nemoclaw" | "none"
+claw_type: openclaw        # "openclaw" | "copaw" | "ironclaw" | "picoclaw" | "zeroclaw" | "nanoclaw" | "nemoclaw" | "opencode" | "none"
 
 llm:
   provider: kimi            # kimi | qwen | openai | minimax | custom
