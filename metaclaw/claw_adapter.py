@@ -571,11 +571,10 @@ def _create_generic_openai_adapter(name: str) -> Callable[["MetaClawConfig"], No
                 "[ClawAdapter] Could not locate %s .env file. "
                 "To use %s with MetaClaw, manually set these environment variables:\n"
                 "  export OPENAI_BASE_URL=%s\n"
-                "  export OPENAI_API_KEY=%s",
+                "  export OPENAI_API_KEY=<your_proxy_api_key>",
                 name,
                 name,
                 base_url,
-                api_key,
             )
 
     return _configure_generic
