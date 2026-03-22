@@ -9,6 +9,7 @@ Supported agents:
   zeroclaw  — patches ~/.zeroclaw/config.toml, runs `zeroclaw service restart`
   nanoclaw  — patches nanoclaw's .env (ANTHROPIC_BASE_URL), restarts via launchd/systemd
   nemoclaw  — registers metaclaw provider in OpenShell, sets inference route
+  opencode  — logs standard OpenAI env vars or patches `~/.opencode/.env`
   none      — skip auto-configuration entirely
 
 Add more claws by implementing a `_configure_<name>` function and registering
@@ -527,6 +528,59 @@ def _write_nemoclaw_config(endpoint_url: str, model: str, api_key: str) -> None:
 
 
 # ------------------------------------------------------------------ #
+# Generic Environment-Based Adapter Factory                           #
+# ------------------------------------------------------------------ #
+
+def _create_generic_openai_adapter(name: str) -> Callable[["MetaClawConfig"], None]:
+    """Create a generic adapter for AI coding agents that use environment variables.
+
+    Many AI coding assistants (such as opencode, claude code, pi, or codex)
+    can be configured to use a custom OpenAI-compatible proxy by setting standard
+    environment variables like OPENAI_BASE_URL and OPENAI_API_KEY.
+
+    This factory solves the problem of adding support for new coding agent
+    harnesses by returning a standard MetaClaw configuration function that tries
+    to locate a `~/.<name>/.env` file and patch it. If the file does not exist,
+    it simply logs instructions telling the user to set those variables.
+
+    To add support for `claude code`, `pi`, or `codex` in the future, simply:
+      1. Register them using `_create_generic_openai_adapter("pi")` etc.
+      2. Add them to `CLAW_TYPES` and update the documentation.
+    """
+    def _configure_generic(cfg: "MetaClawConfig") -> None:
+        env_path = Path.home() / f".{name}" / ".env"
+        base_url = f"http://127.0.0.1:{cfg.proxy_port}/v1"
+        api_key = cfg.proxy_api_key or "metaclaw"
+
+        new_vars = {
+            "OPENAI_BASE_URL": base_url,
+            "OPENAI_API_KEY": api_key,
+        }
+
+        if env_path.exists():
+            _patch_dotenv(env_path, new_vars, label=name.capitalize())
+            logger.info(
+                "[ClawAdapter] Configured %s via %s. "
+                "You may need to restart %s.",
+                name,
+                env_path,
+                name,
+            )
+        else:
+            logger.warning(
+                "[ClawAdapter] Could not locate %s .env file. "
+                "To use %s with MetaClaw, manually set these environment variables:\n"
+                "  export OPENAI_BASE_URL=%s\n"
+                "  export OPENAI_API_KEY=<your_proxy_api_key>",
+                name,
+                name,
+                base_url,
+            )
+
+    return _configure_generic
+
+
+# ------------------------------------------------------------------ #
 # Noop adapter                                                        #
 # ------------------------------------------------------------------ #
 
@@ -546,6 +600,7 @@ _ADAPTERS: dict[str, Callable[["MetaClawConfig"], None]] = {
     "zeroclaw": _configure_zeroclaw,
     "nanoclaw": _configure_nanoclaw,
     "nemoclaw": _configure_nemoclaw,
+    "opencode": _create_generic_openai_adapter("opencode"),
     "none": _configure_none,
 }
 

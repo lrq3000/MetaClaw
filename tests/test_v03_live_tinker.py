@@ -15,6 +15,7 @@ import asyncio
 import os
 import sys
 import time
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -310,6 +311,8 @@ def test_opd_kl_penalty():
 # Test 6: Live Tinker training — full step                             #
 # ------------------------------------------------------------------ #
 
+@pytest.mark.skipif("TINKER_API_KEY" not in os.environ or os.environ["TINKER_API_KEY"] == "tml-dummy-key", reason="Requires real TINKER_API_KEY")
+@pytest.mark.asyncio
 async def test_live_tinker_training():
     """Run a real training step on Tinker: forward_backward → optim → save."""
     separator("Test 6: Live Tinker training step")
@@ -384,6 +387,8 @@ async def test_live_tinker_training():
 # Test 7: Live Tinker — multi-step with generation-tagged samples      #
 # ------------------------------------------------------------------ #
 
+@pytest.mark.skipif("TINKER_API_KEY" not in os.environ or os.environ["TINKER_API_KEY"] == "tml-dummy-key", reason="Requires real TINKER_API_KEY")
+@pytest.mark.asyncio
 async def test_live_tinker_maml_multistep():
     """Run multiple steps simulating MAML-style generation filtering."""
     separator("Test 7: Live Tinker multi-step with MAML generation tags")
@@ -487,6 +492,8 @@ def test_trainer_scheduler_wiring():
 # Test 9: Full outer loop — scheduler + trainer + real Tinker          #
 # ------------------------------------------------------------------ #
 
+@pytest.mark.skipif("TINKER_API_KEY" not in os.environ or os.environ["TINKER_API_KEY"] == "tml-dummy-key", reason="Requires real TINKER_API_KEY")
+@pytest.mark.asyncio
 async def test_outer_loop_with_tinker():
     """
     End-to-end outer loop test:
