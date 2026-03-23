@@ -13,6 +13,7 @@ Requires: TINKER_API_KEY env var set.
 
 import asyncio
 import os
+import pytest
 import sys
 import time
 
@@ -310,6 +311,7 @@ def test_opd_kl_penalty():
 # Test 6: Live Tinker training — full step                             #
 # ------------------------------------------------------------------ #
 
+@pytest.mark.asyncio
 async def test_live_tinker_training():
     """Run a real training step on Tinker: forward_backward → optim → save."""
     separator("Test 6: Live Tinker training step")
@@ -384,6 +386,7 @@ async def test_live_tinker_training():
 # Test 7: Live Tinker — multi-step with generation-tagged samples      #
 # ------------------------------------------------------------------ #
 
+@pytest.mark.asyncio
 async def test_live_tinker_maml_multistep():
     """Run multiple steps simulating MAML-style generation filtering."""
     separator("Test 7: Live Tinker multi-step with MAML generation tags")
@@ -487,6 +490,7 @@ def test_trainer_scheduler_wiring():
 # Test 9: Full outer loop — scheduler + trainer + real Tinker          #
 # ------------------------------------------------------------------ #
 
+@pytest.mark.asyncio
 async def test_outer_loop_with_tinker():
     """
     End-to-end outer loop test:
