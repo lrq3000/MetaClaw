@@ -78,14 +78,14 @@ https://github.com/user-attachments/assets/d86a41a8-4181-4e3a-af0e-dc453a6b8594
 **MetaClaw is an agent that meta-learns and evolves in the wild.**
 Just talk to your agent as you normally would — MetaClaw turns every live conversation into a learning signal, enabling the agent to continuously improve through real-world deployment rather than offline training alone.
 
-Under the hood, it places your model behind a proxy that intercepts interactions from your personal agent (OpenClaw, CoPaw, IronClaw, PicoClaw, ZeroClaw, NanoClaw, NemoClaw, or any OpenAI-compatible client), injects relevant skills at each turn, and meta-learns from accumulated experience. For Anthropic-native agents like NanoClaw, MetaClaw also exposes a `/v1/messages` Anthropic-compatible endpoint so the full pipeline works without any agent-side changes. Skills are summarized automatically after each session; with RL enabled, a meta-learning scheduler defers weight updates to idle windows so the agent is never interrupted during active use.
+Under the hood, it places your model behind a proxy that intercepts interactions from your personal agent (OpenClaw, CoPaw, IronClaw, PicoClaw, ZeroClaw, NanoClaw, NemoClaw, OpenCode, or any OpenAI-compatible client), injects relevant skills at each turn, and meta-learns from accumulated experience. For Anthropic-native agents like NanoClaw, MetaClaw also exposes a `/v1/messages` Anthropic-compatible endpoint so the full pipeline works without any agent-side changes. Skills are summarized automatically after each session; with RL enabled, a meta-learning scheduler defers weight updates to idle windows so the agent is never interrupted during active use.
 
 No GPU cluster required. MetaClaw works with any OpenAI-compatible LLM API out of the box, and uses a Tinker-compatible backend for cloud-based LoRA training. [Tinker](https://www.thinkingmachines.ai/tinker/) is the default reference path, and MinT can be enabled through a separate compatibility package when needed.
 
 ## 🤖 Key Features
 
 ### **One-click deployment**
-Configure once with `metaclaw setup`, then `metaclaw start` brings up the proxy, injects skills, and wires your chosen personal agent (OpenClaw, CoPaw, or IronClaw) automatically. No manual shell scripts needed.
+Configure once with `metaclaw setup`, then `metaclaw start` brings up the proxy, injects skills, and wires your chosen personal agent (OpenClaw, CoPaw, IronClaw, or OpenCode) automatically. No manual shell scripts needed.
 
 ### **Three operating modes**
 
@@ -169,6 +169,7 @@ MetaClaw works as a transparent proxy in front of any personal agent that suppor
 | `zeroclaw` | [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) | Patches `~/.zeroclaw/config.toml` → `provider = "openai-compatible"` + `base_url/model/api_key`. Runs `zeroclaw service restart`. |
 | `nanoclaw` | [NanoClaw](https://github.com/qwibitai/nanoclaw) | Patches nanoclaw's `.env` → `ANTHROPIC_BASE_URL` pointing at the proxy's `/v1/messages` Anthropic-compatible endpoint. Restarts via `launchctl` (macOS) or `systemctl --user` (Linux). |
 | `nemoclaw` | [NemoClaw](https://github.com/NVIDIA/NemoClaw) | Registers a `metaclaw` provider in OpenShell via `openshell provider create` and sets it as the active inference route via `openshell inference set`. Persists config to `~/.nemoclaw/config.json`. |
+| `opencode` | [OpenCode](https://opencode.ai) | Patches `~/.config/opencode/opencode.json` → Registers `metaclaw` provider via `@ai-sdk/openai-compatible` and sets default model. |
 | `none` | — | Skips auto-configuration. Point your agent at the proxy manually. |
 
 ### Setup
@@ -176,7 +177,7 @@ MetaClaw works as a transparent proxy in front of any personal agent that suppor
 Pick your agent during `metaclaw setup` (the first question in the wizard):
 
 ```
-Personal agent to configure (openclaw/copaw/ironclaw/picoclaw/zeroclaw/nanoclaw/nemoclaw/none) [openclaw]:
+Personal agent to configure (openclaw/copaw/ironclaw/picoclaw/zeroclaw/nanoclaw/nemoclaw/opencode/none) [openclaw]:
 ```
 
 Or set it directly at any time:
@@ -188,6 +189,7 @@ metaclaw config claw_type picoclaw   # switch to PicoClaw
 metaclaw config claw_type zeroclaw   # switch to ZeroClaw
 metaclaw config claw_type nanoclaw   # switch to NanoClaw
 metaclaw config claw_type nemoclaw   # switch to NemoClaw
+metaclaw config claw_type opencode   # switch to OpenCode
 metaclaw config claw_type none       # manual / custom agent
 ```
 

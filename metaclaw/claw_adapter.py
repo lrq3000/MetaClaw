@@ -9,6 +9,7 @@ Supported agents:
   zeroclaw  — patches ~/.zeroclaw/config.toml, runs `zeroclaw service restart`
   nanoclaw  — patches nanoclaw's .env (ANTHROPIC_BASE_URL), restarts via launchd/systemd
   nemoclaw  — registers metaclaw provider in OpenShell, sets inference route
+  opencode  — registers metaclaw provider in ~/.config/opencode/opencode.json
   none      — skip auto-configuration entirely
 
 Add more claws by implementing a `_configure_<name>` function and registering
@@ -527,6 +528,60 @@ def _write_nemoclaw_config(endpoint_url: str, model: str, api_key: str) -> None:
 
 
 # ------------------------------------------------------------------ #
+# OpenCode adapter                                                    #
+# ------------------------------------------------------------------ #
+
+def _configure_opencode(cfg: "MetaClawConfig") -> None:
+    """Auto-configure OpenCode to route API calls through MetaClaw proxy.
+
+    OpenCode uses ~/.config/opencode/opencode.json (or OS equivalent) for configuration.
+    We inject a 'metaclaw' provider using the @ai-sdk/openai-compatible npm package
+    and set the default model.
+    """
+    config_path = Path.home() / ".config" / "opencode" / "opencode.json"
+    model_id = cfg.llm_model_id or cfg.served_model_name or "metaclaw-model"
+
+    data: dict = {}
+    if config_path.exists():
+        try:
+            data = json.loads(config_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning("[ClawAdapter] Failed to read %s: %s", config_path, e)
+
+    # Ensure provider dict exists
+    if not isinstance(data.get("provider"), dict):
+        data["provider"] = {}
+
+    # Inject MetaClaw provider
+    data["provider"]["metaclaw"] = {
+        "npm": "@ai-sdk/openai-compatible",
+        "name": "MetaClaw",
+        "options": {
+            "baseURL": f"http://127.0.0.1:{cfg.proxy_port}/v1",
+            "apiKey": cfg.proxy_api_key or "metaclaw",
+        },
+        "models": {
+            model_id: {
+                "name": model_id,
+            }
+        }
+    }
+
+    # Set default model
+    data["model"] = f"metaclaw/{model_id}"
+
+    try:
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
+            json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        logger.info("[ClawAdapter] OpenCode config updated: %s", config_path)
+    except Exception as e:
+        logger.error("[ClawAdapter] Failed to write %s: %s", config_path, e)
+
+
+# ------------------------------------------------------------------ #
 # Noop adapter                                                        #
 # ------------------------------------------------------------------ #
 
@@ -546,6 +601,7 @@ _ADAPTERS: dict[str, Callable[["MetaClawConfig"], None]] = {
     "zeroclaw": _configure_zeroclaw,
     "nanoclaw": _configure_nanoclaw,
     "nemoclaw": _configure_nemoclaw,
+    "opencode": _configure_opencode,
     "none": _configure_none,
 }
 
